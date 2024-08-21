@@ -1,0 +1,124 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+// Prisma schema file (schema.prisma)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                  Int                   @id @default(autoincrement())
+  username            String                @unique
+  email               String                @unique
+  password            String
+  profiles            UserProfile?
+  Proyecto            Proyecto[]
+  ProyectoColaborador ProyectoColaborador[]
+  is_superuser  Boolean
+}
+
+model UserProfile {
+  id_UP                  Int          @id @default(autoincrement())
+  userId                 Int          @unique
+  user                   User         @relation(fields: [userId], references: [id])
+  semestreId             Int?
+  semestre               Semestre?    @relation(fields: [semestreId], references: [id_semestre])
+  universidadId          Int?
+  universidad            Universidad? @relation(fields: [universidadId], references: [id_universidad])
+  carreraId              Int?
+  carrera                Carrera?     @relation(fields: [carreraId], references: [id_carrera])
+  fotoPerfil             String? // Ruta de la imagen de perfil
+  acercaDeMi             String?
+  telefono               String?
+  fechaNacimiento        DateTime?
+  mostrarFechaNacimiento Boolean      @default(true)
+}
+
+model Universidad {
+  id_universidad Int           @id @default(autoincrement())
+  nombre         String        @unique
+  carreras       Carrera[]
+  perfiles       UserProfile[]
+}
+
+model Carrera {
+  id_carrera    Int           @id @default(autoincrement())
+  nombre        String
+  universidadId Int
+  universidad   Universidad   @relation(fields: [universidadId], references: [id_universidad])
+  userProfiles  UserProfile[]
+}
+
+model Semestre {
+  id_semestre  Int           @id @default(autoincrement())
+  nombre       String        @unique
+  userProfiles UserProfile[]
+}
+
+model Proyecto {
+  id_proyecto     Int                     @id @default(autoincrement())
+  nombreProyecto  String
+  creadorId       Int
+  creador         User                    @relation(fields: [creadorId], references: [id])
+  colaboradores   ProyectoColaborador[]
+  fechaCreacion   DateTime                @default(now())
+  descripcion     String
+  documentacion   String? // Ruta del archivo
+  imagenes        ProyectoImagen[]
+  videos          ProyectoVideo[]
+  actualizaciones ActualizacionProyecto[]
+}
+
+model ProyectoImagen {
+  id_Pimg    Int      @id @default(autoincrement())
+  proyectoId Int
+  proyecto   Proyecto @relation(fields: [proyectoId], references: [id_proyecto])
+  imagen     String // Ruta de la imagen
+}
+
+model ProyectoVideo {
+  id_Pvid    Int      @id @default(autoincrement())
+  proyectoId Int
+  proyecto   Proyecto @relation(fields: [proyectoId], references: [id_proyecto])
+  video      String // Ruta del video
+}
+
+model ActualizacionProyecto {
+  id_AP      Int                           @id @default(autoincrement())
+  proyectoId Int
+  proyecto   Proyecto                      @relation(fields: [proyectoId], references: [id_proyecto])
+  texto      String
+  fecha      DateTime                      @default(now())
+  imagenes   ActualizacionProyectoImagen[]
+  videos     ActualizacionProyectoVideo[]
+}
+
+model ActualizacionProyectoImagen {
+  id_APimg        Int                   @id @default(autoincrement())
+  actualizacionId Int
+  actualizacion   ActualizacionProyecto @relation(fields: [actualizacionId], references: [id_AP])
+  imagen          String // Ruta de la imagen
+}
+
+model ActualizacionProyectoVideo {
+  id_APvid        Int                   @id @default(autoincrement())
+  actualizacionId Int
+  actualizacion   ActualizacionProyecto @relation(fields: [actualizacionId], references: [id_AP])
+  video           String // Ruta del video
+}
+
+model ProyectoColaborador {
+  id_PC      Int      @id @default(autoincrement())
+  usuarioId  Int
+  usuario    User     @relation(fields: [usuarioId], references: [id])
+  proyectoId Int
+  proyecto   Proyecto @relation(fields: [proyectoId], references: [id_proyecto])
+}
